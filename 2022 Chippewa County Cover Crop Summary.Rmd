@@ -1,0 +1,95 @@
+---
+title: "2022 Chippewa County Cover Crop Summary"
+author: "Kolby Grint"
+date: "2022-12-07"
+output: html_document
+---
+
+```{r}
+#loading packages
+library(dplyr)
+library(ggplot2)
+library(car)
+library(maps)
+```
+
+```{r}
+#gettting data from local file
+data1 = read.csv(file="2022 Cover Crop Survey_test.csv")
+
+str(data1)
+```
+
+
+# 1. What Chippewa County township(s) do you farm in?
+
+```{r}
+Q1 = data1 %>%
+  count(Township.s., sort= TRUE) %>%
+  rename("response" = "Township.s.")
+```
+
+```{r}
+cities_data = us.cities %>%
+  filter(county)
+```
+
+```{r}
+library(tigris)
+chippewa_map = counties("WI")
+```
+
+
+```{r}
+gg <- ggplot() + 
+  geom_sf(data = (filter(chippewa_map, NAME == "Chippewa")), color="black", fill="white", size=0.25) +
+  geom_text(chip_townships, aes(x = lon, y = lat, label= township))
+  
+gg <- ggplot(data = (filter(chippewa_map, NAME == "Chippewa")),) + 
+  geom_sf(data = (filter(chippewa_map, NAME == "Chippewa")), color="black", fill="white", size=0.25) #+
+  geom_text(chip_townships, aes(x = lon, y = lat, label= township))
+
+gg
+```
+
+```{r}
+#building a datafram with chippewa county townships and approximate GPS locations 55017
+townships = tribble(
+  ~township, ~lat, ~lon,
+  'Sampson', 45.2356, -91.4639,
+  'Birch Creek', 45.2309, -91.1932,
+  'Lake Holcombe', 45.2223, -91.1178,
+  'Ruby', 45.2492, -91.0040,
+  'Auburn', 45.1425, -91.6077,
+  'Bloomer', 45.1533, -91.4429
+)
+
+,
+  'Cleveland', , ,
+  'Estella', , ,
+  'Cooks Valley', , ,
+  'Woodmohr', , ,
+  'Eagle Point', , ,
+  'Anson', , ,
+  'Arthur', , ,
+  'Colburn', , ,
+  'Howard', , ,
+  'Tilden', , ,
+  'Goetz', , ,
+  'Delmar', , ,
+  'Wheaton', , ,
+  'Hallie', , ,
+  'Lafayette', , ,
+  'Sigel', , ,
+  'Edson', , 
+
+```
+
+```{r}
+wi_county= map_data("county","wisconsin")
+```
+
+```{r}
+Chip_township = ggplot(wi_county, aes())
+```
+
