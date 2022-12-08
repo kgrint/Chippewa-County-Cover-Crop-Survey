@@ -11,9 +11,11 @@ library(dplyr)
 library(ggplot2)
 library(car)
 library(maps)
+library(RColorBrewer)
 ```
 
 ```{r}
+getwd()
 #gettting data from local file
 data1 = read.csv(file="2022 Cover Crop Survey_test1.csv")
 ```
@@ -38,19 +40,39 @@ data1 = data1 %>%
 str(data1)
 ```
 
-
 # 1. What Chippewa County township(s) do you farm in?
-
 ```{r}
-Q1 = data1 %>%
+q1 = data1 %>%
   #mutate(Township.s. = as.factor(Township.s.)) %>%
   #filter(!is.na(Township.s.)) %>%
   count(Township.s., sort= TRUE) %>%
   rename("response" = "Township.s.")
 ```
 
+```{r, fig.height = 5, fig.width = 7}
+q1_plot = q1 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "cornflowerblue") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,10), breaks = c(0,5,10)) +
+  labs(title= "Townships", y = "# of respondents") +
+  coord_flip()
+
+q1_plot
+```
+
 ```{r}
-#building a datafram with chippewa county townships and approximate GPS locations 55017
+ggsave("CCTownships_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+```
+
+
+```{r}
+#building a dataframe with chippewa county townships and approximate GPS locations 55017
 townships = tribble(
   ~township, ~lat, ~long,
   'Sampson', 45.2356, -91.4639,
@@ -99,15 +121,15 @@ Chip_township = ggplot(wi_county, aes(x = long, y = lat, group= group)) +
 Chip_township
 ```
 
-# 2. Total number of 2022 cropland acres
+# 2. Total number of 2022 cropland acres & 3. Total number of 2022 fall cover crops planted
 ```{r}
+#what do we want? 
+#plot raw total cropland and total cover crop acres planted.
+#average percent of total acres cover cropped for farms participating would be interesting.
 
 ```
 
-# 3. Total number of 2022 fall cover crops planted
-```{r}
 
-```
 
 # 4. Previous crops
 ```{r}
@@ -118,19 +140,308 @@ Q4 = data1 %>%
 ```
 
 ```{r}
+data
+```
+
+
+```{r, fig.height = 5, fig.width = 7}
 Q4_plot = Q4 %>%
-  ggplot(aes(x = response, y = n, fill= response, label= n)) +
-  geom_col() +
-  geom_text(nudge_y= 2) +
-  theme(axis.title.y = element_blank(),
-        legend.position = "none") +
-  labs(title= "Previous Crop(s)") +
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "gold3") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,10), breaks = c(0,5,10)) +
+  labs(title= "Previous Crop(s)", y = "# of respondents") +
   coord_flip()
+
 Q4_plot
+```
+
+```{r}
+ggsave("PreviousCrop_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
 ```
 
 # 5. 20222 cover crop planting date range
 ```{r}
+data1 = data1 %>%
+  mutate(Planting.date.start = as.Date(Planting.date.start, format = "%m/%d/%y"),
+         Last.planting.date  = as.Date(Last.planting.date, format = "%m/%d/%y"))
+```
+
+```{r, fig.height = 5, fig.width = 7}
+planting_date = data1 %>%
+  ggplot() +
+  geom_point(aes(x=Planting.date.start, y=Previous.crop.s., color=Species.planted))
+
+planting_date
+```
+
+# 6. What Species did you plant
+```{r}
+q6= data1 %>%
+  count(Species.planted, sort = TRUE) %>%
+  rename(response = Species.planted) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+species = q6 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "forestgreen") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Cover Crop Species", y = "# of respondents") +
+  coord_flip()
+
+species
+```
+
+```{r}
+ggsave("CCSpecies_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+```
+
+# 7. Seeding rate(s)
+```{r, fig.height = 5, fig.width = 7}
+rate = data1 %>%
+  ggplot(aes(x= Species.planted, y= Seeding.rate.lbs, color = Planting.method.s.)) +
+  geom_jitter(size= 3) +
+  scale_y_continuous(limits = c(0,150), breaks = c(0,30,60,90,120,150)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_text(size=15),
+        axis.text = element_text(size = 12),
+        plot.title = element_text(size = 20)) +
+  labs(title= "Cover Crop Seeding Rate", y = "Seeding rate lbs") 
+  #facet_grid(cols= vars(Species.planted)) +
+  #coord_flip()
+
+rate
+```
+
+```{r}
+ggsave("CCSeedRate_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+```
+
+# 8. Planting method(s)
+```{r}
+q8= data1 %>%
+  count(Planting.method.s., sort = TRUE) %>%
+  rename(response = Planting.method.s.) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+method = q8 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "azure4") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,10), breaks = c(0,5,10)) +
+  labs(title= "Planting Method", y = "# of respondents") +
+  coord_flip()
+
+method
+```
+
+```{r}
+ggsave("CCPlantMethod_2022.png", plot = method, height = 5, width = 7, dpi = 300)
+```
+
+# 9. Tillage
+```{r}
+q9= data1 %>%
+  count(Tillage., sort = TRUE) %>%
+  rename(response = Tillage.) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+tillage = q9 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "saddlebrown") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Tillage", y = "# of respondents") +
+  coord_flip()
+
+tillage
+```
+
+```{r}
+ggsave("CCTillage_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
+
+# 10. Manure
+## Number of respondents who applied manure
+```{r}
+q10.1= data1 %>%
+  count(Manure.timing, sort = TRUE) %>%
+  rename(response = Manure.timing) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+manure1 = q10.1 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "tan4") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Manure", y = "# of respondents") +
+  coord_flip()
+
+manure1
+```
+
+```{r}
+ggsave("CCManure1_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
+
+## Manure application rates
+### Liquid
+
+### Dry
+
+# 11. Seed Source
+```{r}
+q11= data1 %>%
+  count(Seed.Source, sort = TRUE) %>%
+  rename(response = Seed.Source) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+seed_source = q11 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "darkorchid1") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Seed Source", y = "# of respondents") +
+  coord_flip()
+
+seed_source
+```
+
+```{r}
+ggsave("CCManure1_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
+
+## For bin run seed
+### Seed cleaned
+
+### Germ tested
+
+
+# 12. Anticipated use
+```{r}
+q12= data1 %>%
+  count(Cover.crop.use, sort = TRUE) %>%
+  rename(response = Cover.crop.use) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+CC_use = q12 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "red2") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Intended Cover Crop Use", y = "# of respondents") +
+  coord_flip()
+
+CC_use
+```
+
+```{r}
+ggsave("CCManure1_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
+
+# 13. Termination method/timing
+```{r}
+q13= data1 %>%
+  count(Termination.method, sort = TRUE) %>%
+  rename(response = Termination.method) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+Termination = q11 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "orange1") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Seed Source", y = "# of respondents") +
+  coord_flip()
+
+Termination
+```
+
+```{r}
+ggsave("CCManure1_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
+
+# 14.
+
+# 15.
+
+# 16. Reason for planting cover crops
+```{r}
 
 ```
 
+
+```{r}
+q16= data1 %>%
+  count(Seed.Source, sort = TRUE) %>%
+  rename(response = Seed.Source) 
+```
+
+```{r, fig.height = 5, fig.width = 7}
+seed_source = q16 %>%
+  ggplot(aes(x = response, y = n)) +
+  geom_col(fill = "darkorchid1") +
+  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
+        plot.title = element_text(size = 20)) +
+  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  labs(title= "Seed Source", y = "# of respondents") +
+  coord_flip()
+
+seed_source
+```
+
+```{r}
+ggsave("CCManure1_2022.png", plot = tillage, height = 5, width = 7, dpi = 300)
+```
