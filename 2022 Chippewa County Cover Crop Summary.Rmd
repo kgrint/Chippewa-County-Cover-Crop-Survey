@@ -5,7 +5,7 @@ date: "2022-12-07"
 output: html_document
 ---
 
-```{r}
+```{r, echo= FALSE}
 #loading packages
 library(dplyr)
 library(ggplot2)
@@ -15,8 +15,26 @@ library(maps)
 
 ```{r}
 #gettting data from local file
-data1 = read.csv(file="2022 Cover Crop Survey_test.csv")
+data1 = read.csv(file="2022 Cover Crop Survey_test1.csv")
+```
 
+```{r}
+data1 = data1 %>%
+  mutate(Township.s. = as.factor(Township.s.),
+         Previous.crop.s. = as.factor(Previous.crop.s.),
+         #Planting.date.start = as.Date(Planting.date.start),
+         #Last.planting.date  = as.Date(Last.planting.date ),
+         Species.planted = as.factor(Species.planted),
+         Planting.method.s. = as.factor(Planting.method.s.),
+         Tillage. = as.factor(Tillage),
+         Manure.timing = as.factor(Manure.timing),
+         Liquid.Manure.Rate = as.factor(Liquid.Manure.Rate),
+         Solid.manure.rate = as.factor(Solid.manure.rate),
+         Seed.Source = as.factor(Seed.Source),
+         Bin.run.cleaned = as.factor(Bin.run.cleaned),
+         Bin.run.germ = as.factor(Bin.run.germ),
+         Cover.crop.use = as.factor(Cover.crop.use),
+         Termination.method = as.factor(Termination.method))
 str(data1)
 ```
 
@@ -25,64 +43,39 @@ str(data1)
 
 ```{r}
 Q1 = data1 %>%
+  #mutate(Township.s. = as.factor(Township.s.)) %>%
+  #filter(!is.na(Township.s.)) %>%
   count(Township.s., sort= TRUE) %>%
   rename("response" = "Township.s.")
 ```
 
 ```{r}
-cities_data = us.cities %>%
-  filter(county)
-```
-
-```{r}
-library(tigris)
-chippewa_map = counties("WI")
-```
-
-
-```{r}
-gg <- ggplot() + 
-  geom_sf(data = (filter(chippewa_map, NAME == "Chippewa")), color="black", fill="white", size=0.25) +
-  geom_text(chip_townships, aes(x = lon, y = lat, label= township))
-  
-gg <- ggplot(data = (filter(chippewa_map, NAME == "Chippewa")),) + 
-  geom_sf(data = (filter(chippewa_map, NAME == "Chippewa")), color="black", fill="white", size=0.25) #+
-  geom_text(chip_townships, aes(x = lon, y = lat, label= township))
-
-gg
-```
-
-```{r}
 #building a datafram with chippewa county townships and approximate GPS locations 55017
 townships = tribble(
-  ~township, ~lat, ~lon,
+  ~township, ~lat, ~long,
   'Sampson', 45.2356, -91.4639,
   'Birch Creek', 45.2309, -91.1932,
   'Lake Holcombe', 45.2223, -91.1178,
   'Ruby', 45.2492, -91.0040,
   'Auburn', 45.1425, -91.6077,
-  'Bloomer', 45.1533, -91.4429
-)
-
-,
-  'Cleveland', , ,
-  'Estella', , ,
-  'Cooks Valley', , ,
-  'Woodmohr', , ,
-  'Eagle Point', , ,
-  'Anson', , ,
-  'Arthur', , ,
-  'Colburn', , ,
-  'Howard', , ,
-  'Tilden', , ,
-  'Goetz', , ,
-  'Delmar', , ,
-  'Wheaton', , ,
-  'Hallie', , ,
-  'Lafayette', , ,
-  'Sigel', , ,
-  'Edson', , 
-
+  'Bloomer', 45.1533, -91.4429,
+  'Cleveland', 45.1386, -91.2647,
+  'Estella', 45.1650, -91.1310,
+  'Cooks Valley', 45.0706, -91.5910,
+  'Woodmohr', 45.0854, -91.4176,
+  'Eagle Point', 45.0584, -91.3895,
+  'Anson', 45.0445, -91.2749,
+  'Arthur', 45.0682, -91.1461,
+  'Colburn', 45.1104, -90.9877,
+  'Howard', 45.0088, -91.5893,
+  'Tilden', 44.9877, -91.4526,
+  'Goetz', 44.9733, -91.1517,
+  'Delmar', 45.0097, -91.0250,
+  'Wheaton', 44.9151, -91.5483,
+  'Hallie', 44.8810, -91.3704,
+  'Lafayette', 44.9262, -91.2743,
+  'Sigel', 44.9226, -91.1457,
+  'Edson', 44.9081, -91.0015 )
 ```
 
 ```{r}
@@ -90,6 +83,54 @@ wi_county= map_data("county","wisconsin")
 ```
 
 ```{r}
-Chip_township = ggplot(wi_county, aes())
+Chip_township = ggplot(wi_county, aes(x = long, y = lat, group= group)) +
+  geom_polygon(fill= "steelblue2", colour = "black") +
+  #coord_quickmap() +
+  coord_fixed(xlim = c(44.8286,45.3579), ylim = c(-90.8381,-91.7253), 
+  ratio = 1.3) +
+  #theme_void() +
+  theme(axis.text = element_blank(),
+  axis.line = element_blank(),
+  axis.ticks = element_blank(),
+  panel.border = element_blank(),
+  panel.grid = element_blank(),
+  axis.title = element_blank())
+
+Chip_township
+```
+
+# 2. Total number of 2022 cropland acres
+```{r}
+
+```
+
+# 3. Total number of 2022 fall cover crops planted
+```{r}
+
+```
+
+# 4. Previous crops
+```{r}
+Q4 = data1 %>%
+  count(Previous.crop.s., sort= TRUE) %>%
+  rename(response = Previous.crop.s.) 
+ 
+```
+
+```{r}
+Q4_plot = Q4 %>%
+  ggplot(aes(x = response, y = n, fill= response, label= n)) +
+  geom_col() +
+  geom_text(nudge_y= 2) +
+  theme(axis.title.y = element_blank(),
+        legend.position = "none") +
+  labs(title= "Previous Crop(s)") +
+  coord_flip()
+Q4_plot
+```
+
+# 5. 20222 cover crop planting date range
+```{r}
+
 ```
 
