@@ -1,0 +1,60 @@
+---
+title: "Chippewa Township Map"
+author: "Kolby Grint"
+date: "2022-12-15"
+output: pdf_document
+---
+
+```{r}
+#required packages
+library(broom)
+library(ggplot2)
+library(sf)
+library(dplyr)
+```
+
+
+```{r}
+Chip_shp= st_read("Towns")
+
+str(Chip_shp)
+```
+
+```{r}
+#couldn't get this to work.
+townships = tribble(
+  ~township, ~lat, ~long,
+  'Sampson', 45.2356, -91.4639,
+  'Birch Creek', 45.2309, -91.1932,
+  'Lake Holcombe', 45.2223, -91.1178,
+  'Ruby', 45.2492, -91.0040,
+  'Auburn', 45.1425, -91.6077,
+  'Bloomer', 45.1533, -91.4429,
+  'Cleveland', 45.1386, -91.2647,
+  'Estella', 45.1650, -91.1310,
+  'Cooks Valley', 45.0706, -91.5910,
+  'Woodmohr', 45.0854, -91.4176,
+  'Eagle Point', 45.0584, -91.3895,
+  'Anson', 45.0445, -91.2749,
+  'Arthur', 45.0682, -91.1461,
+  'Colburn', 45.1104, -90.9877,
+  'Howard', 45.0088, -91.5893,
+  'Tilden', 44.9877, -91.4526,
+  'Goetz', 44.9733, -91.1517,
+  'Delmar', 45.0097, -91.0250,
+  'Wheaton', 44.9151, -91.5483,
+  'Hallie', 44.8810, -91.3704,
+  'Lafayette', 44.9262, -91.2743,
+  'Sigel', 44.9226, -91.1457,
+  'Edson', 44.9081, -91.0015 )
+```
+
+
+```{r}
+ggplot(Chip_shp) +
+  geom_sf() +
+  #coord_sf() +
+  geom_sf_label(aes(label = NAME), size = 2.5)
+
+```
+
