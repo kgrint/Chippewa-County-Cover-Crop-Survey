@@ -7,7 +7,6 @@ output: pdf_document
 
 ```{r}
 #required packages
-library(broom)
 library(ggplot2)
 library(sf)
 library(dplyr)
@@ -17,7 +16,7 @@ library(dplyr)
 ```{r}
 Chip_shp= st_read("Towns")
 
-str(Chip_shp)
+#str(Chip_shp)
 ```
 
 ```{r}
@@ -49,12 +48,39 @@ townships = tribble(
   'Edson', 44.9081, -91.0015 )
 ```
 
-
 ```{r}
 ggplot(Chip_shp) +
   geom_sf() +
   #coord_sf() +
   geom_sf_label(aes(label = NAME), size = 2.5)
 
+```
+
+```{r}
+data1 = read.csv(file="2022 Cover Crop Survey_test1.csv")
+
+```
+
+```{r}
+data2 = data1 %>%
+  count(Township.s., sort = TRUE)
+#we have Bloomer, Tilden, Woodmohr, Wheaton, Anson, Arthur, Auburn, Cooks Valley, Eagle Point, Goetz, Howard, and Lafayette
+```
+
+```{r}
+Chip_shp = Chip_shp %>%
+  left_join(data2, by = c("NAME" = "Township.s.")) %>%
+  mutate(n = ifelse(is.na(n), 0, n))
+```
+
+```{r}
+ggplot(Chip_shp, aes(fill = n)) +
+  geom_sf() +
+  scale_fill_gradient2(midpoint = 2, mid = "green2", low = "white", high = "green4") +
+  #coord_sf() +
+  geom_sf_label(aes(label = NAME), size = 2.5) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank())
 ```
 
