@@ -64,7 +64,6 @@ data1 = read.csv(file="2022 Cover Crop Survey_test1.csv")
 ```{r}
 data2 = data1 %>%
   count(Township.s., sort = TRUE)
-#we have Bloomer, Tilden, Woodmohr, Wheaton, Anson, Arthur, Auburn, Cooks Valley, Eagle Point, Goetz, Howard, and Lafayette
 ```
 
 ```{r}
@@ -76,7 +75,7 @@ Chip_shp = Chip_shp %>%
 ```{r}
 ggplot(Chip_shp, aes(fill = n)) +
   geom_sf() +
-  scale_fill_gradient2(midpoint = 2, mid = "green2", low = "white", high = "green4") +
+  scale_fill_gradient2(midpoint = 2, mid = "green3", low = "white", high = "green4") +
   #coord_sf() +
   geom_sf_label(aes(label = NAME), size = 2.5) +
   theme(axis.text = element_blank(),
