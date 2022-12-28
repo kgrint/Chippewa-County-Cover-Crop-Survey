@@ -7,119 +7,69 @@ output: html_document
 
 ```{r, echo= FALSE}
 #loading packages
-library(dplyr)
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(unheadr)
 library(ggplot2)
-library(car)
-library(maps)
-library(RColorBrewer)
+library(sf)
+library(dplyr)
+library(tibble)
+
 ```
 
 ```{r}
 getwd()
 #gettting data from local file
-data1 = read.csv(file="2022 Cover Crop Survey_test1.csv")
-```
+data1 = read_excel("2022CCSurvey_1.xlsx") %>% 
+  clean_names() 
 
-```{r}
-data1 = data1 %>%
-  mutate(Township.s. = as.factor(Township.s.),
-         Previous.crop.s. = as.factor(Previous.crop.s.),
-         #Planting.date.start = as.Date(Planting.date.start),
-         #Last.planting.date  = as.Date(Last.planting.date ),
-         Species.planted = as.factor(Species.planted),
-         Planting.method.s. = as.factor(Planting.method.s.),
-         Tillage. = as.factor(Tillage),
-         Manure.timing = as.factor(Manure.timing),
-         Liquid.Manure.Rate = as.factor(Liquid.Manure.Rate),
-         Solid.manure.rate = as.factor(Solid.manure.rate),
-         Seed.Source = as.factor(Seed.Source),
-         Bin.run.cleaned = as.factor(Bin.run.cleaned),
-         Bin.run.germ = as.factor(Bin.run.germ),
-         Cover.crop.use = as.factor(Cover.crop.use),
-         Termination.method = as.factor(Termination.method))
-str(data1)
 ```
-
 # 1. What Chippewa County township(s) do you farm in?
 ```{r}
-q1 = data1 %>%
-  #mutate(Township.s. = as.factor(Township.s.)) %>%
-  #filter(!is.na(Township.s.)) %>%
-  count(Township.s., sort= TRUE) %>%
-  rename("response" = "Township.s.")
-```
-
-```{r, fig.height = 5, fig.width = 7}
-q1_plot = q1 %>%
-  ggplot(aes(x = response, y = n)) +
-  geom_col(fill = "cornflowerblue") +
-  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
-  theme(legend.position = "none",
-        axis.title.x = element_text(size = 15),
-        axis.title.y = element_blank(),
-        axis.text = element_text(size = 15),
-        plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,10), breaks = c(0,5,10)) +
-  labs(title= "Townships", y = "# of respondents") +
-  coord_flip()
-
-q1_plot
-```
-
-```{r}
-ggsave("CCTownships_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+#Chippewa County Township Shapefile
+Chip_shp= st_read("Towns")
 ```
 
 
 ```{r}
-#building a dataframe with chippewa county townships and approximate GPS locations 55017
-townships = tribble(
-  ~township, ~lat, ~long,
-  'Sampson', 45.2356, -91.4639,
-  'Birch Creek', 45.2309, -91.1932,
-  'Lake Holcombe', 45.2223, -91.1178,
-  'Ruby', 45.2492, -91.0040,
-  'Auburn', 45.1425, -91.6077,
-  'Bloomer', 45.1533, -91.4429,
-  'Cleveland', 45.1386, -91.2647,
-  'Estella', 45.1650, -91.1310,
-  'Cooks Valley', 45.0706, -91.5910,
-  'Woodmohr', 45.0854, -91.4176,
-  'Eagle Point', 45.0584, -91.3895,
-  'Anson', 45.0445, -91.2749,
-  'Arthur', 45.0682, -91.1461,
-  'Colburn', 45.1104, -90.9877,
-  'Howard', 45.0088, -91.5893,
-  'Tilden', 44.9877, -91.4526,
-  'Goetz', 44.9733, -91.1517,
-  'Delmar', 45.0097, -91.0250,
-  'Wheaton', 44.9151, -91.5483,
-  'Hallie', 44.8810, -91.3704,
-  'Lafayette', 44.9262, -91.2743,
-  'Sigel', 44.9226, -91.1457,
-  'Edson', 44.9081, -91.0015 )
+#filtering data to townships and then counting # of responses for each township
+townships <- data1 %>% 
+  select(township) %>%
+  separate_rows(township, sep = ",") %>%
+  count(township, sort = TRUE) %>%
+  rename(farmers = n)
 ```
 
 ```{r}
-wi_county= map_data("county","wisconsin")
+#Joining township counts to shapefile information including areas with no response
+Chip_shp = Chip_shp %>%
+  left_join(townships, by = c("NAME" = "township")) %>%
+  mutate(farmers = ifelse(is.na(farmers), 0, farmers))
+```
+
+```{r, fig.height = 8, fig.width = 12}
+#plotting the map with scale fill based on # of responses for each township
+Q1_plot = ggplot(Chip_shp, aes(fill = farmers)) +
+  geom_sf() +
+  scale_fill_gradient2(midpoint = 3, mid = "green3", low = "white", high = "green4") +
+  #annotate(geom = "text", ) +
+  geom_sf_label(aes(label = NAME), size = 4) +
+  theme(plot.title = element_text(size = 20),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14)) +
+  labs(title = "Farmer Use of 2022 Cost-Share for Chippewa County WI Townships")
+
+Q1_plot
 ```
 
 ```{r}
-Chip_township = ggplot(wi_county, aes(x = long, y = lat, group= group)) +
-  geom_polygon(fill= "steelblue2", colour = "black") +
-  #coord_quickmap() +
-  coord_fixed(xlim = c(44.8286,45.3579), ylim = c(-90.8381,-91.7253), 
-  ratio = 1.3) +
-  #theme_void() +
-  theme(axis.text = element_blank(),
-  axis.line = element_blank(),
-  axis.ticks = element_blank(),
-  panel.border = element_blank(),
-  panel.grid = element_blank(),
-  axis.title = element_blank())
-
-Chip_township
+ggsave("CCTownships_2022.png", plot = Q1_plot, height = 8, width = 12, dpi = 300)
 ```
+
 
 # 2. Total number of 2022 cropland acres & 3. Total number of 2022 fall cover crops planted
 ```{r}
@@ -129,75 +79,105 @@ Chip_township
 
 ```
 
-
-
 # 4. Previous crops
 ```{r}
 Q4 = data1 %>%
-  count(Previous.crop.s., sort= TRUE) %>%
-  rename(response = Previous.crop.s.) 
+  separate_rows(prior_crops, sep = ",") %>%
+  count(prior_crops, sort= TRUE) %>%
+  rename(response = prior_crops) 
+
+#trying to get a count on the number of responses for a certain variable
+Q4_n = data1 %>%
+  select(respondent, prior_crops) %>%
+  filter(!is.na(prior_crops)) 
+
+#count(Q4_n,respondents)
  
 ```
-
-```{r}
-data
-```
-
 
 ```{r, fig.height = 5, fig.width = 7}
 Q4_plot = Q4 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "gold3") +
-  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  geom_text(aes(label= n), nudge_y= 0.75, size = 5) +
+  theme_gray() +
   theme(legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,10), breaks = c(0,5,10)) +
-  labs(title= "Previous Crop(s)", y = "# of respondents") +
+  scale_y_continuous(limits= c(0,22), breaks = c(0,5,10,15,20)) +
+  labs(title= "Previous Crop(s)", y = "# of responses") + #look at using caption to add sample size
   coord_flip()
 
 Q4_plot
 ```
 
 ```{r}
-ggsave("PreviousCrop_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+ggsave("PreviousCrop_2022.png", plot = Q4_plot, height = 5, width = 7, dpi = 300)
 ```
 
 # 5. 20222 cover crop planting date range
 ```{r}
-data1 = data1 %>%
-  mutate(Planting.date.start = as.Date(Planting.date.start, format = "%m/%d/%y"),
-         Last.planting.date  = as.Date(Last.planting.date, format = "%m/%d/%y"))
+planting_date1 = data1 %>%
+  select(respondent, firstplant_date, dec_height) %>%
+  mutate(plant_date = as.Date(firstplant_date)) %>%
+  select(respondent, plant_date, dec_height)
+
+planting_date2 = data1 %>%
+  select(respondent, lastplant_date, dec_height) %>%
+  mutate(plant_date = as.Date(lastplant_date)) %>%
+  select(respondent, plant_date, dec_height)
+
+planting_date = rbind(planting_date1,planting_date2) %>%
+  filter(!is.na(plant_date)) %>%
+  rename(Height = dec_height)
+
 ```
 
-```{r, fig.height = 5, fig.width = 7}
-planting_date = data1 %>%
-  ggplot() +
-  geom_point(aes(x=Planting.date.start, y=Previous.crop.s., color=Species.planted))
+```{r, fig.width = 7, fig.height = 5}
+ Q5_plot = planting_date %>%
+  ggplot(aes(x = plant_date, y = respondent, group = respondent, color= Height)) +
+  geom_point(size = 3) +
+  geom_line(linewidth = 2) +
+  scale_color_gradient2(midpoint = 6, mid = "steelblue4", low = "slategray1", high = "blue") +
+  scale_x_date(limit= c(as.Date("2022-08-01"),as.Date("2022-12-01"))) +
+  ylim(0,26) +
+  theme_bw() +
+  theme(plot.title = element_text(size = 20),
+        axis.title.x = element_blank(),
+       axis.title.y = element_blank(),
+       axis.text.x = element_text(size = 15),
+       axis.text.y = element_blank(),
+       axis.ticks.y = element_blank()) +
+  labs(title = "2022 Cover Crop Planting Dates")
 
-planting_date
+Q5_plot
 ```
+
+
+
 
 # 6. What Species did you plant
 ```{r}
-q6= data1 %>%
-  count(Species.planted, sort = TRUE) %>%
-  rename(response = Species.planted) 
+Q6= data1 %>%
+  separate_rows(cc_species, sep = ",") %>%
+  count(cc_species, sort = TRUE) %>%
+  rename(response = cc_species)
 ```
 
-```{r, fig.height = 5, fig.width = 7}
-species = q6 %>%
+```{r, fig.width = 7, fig.height = 5}
+species = Q6 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "forestgreen") +
-  geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
+  geom_text(aes(label= n), nudge_y= 0.75, size = 5) +
+  theme_bw() +
   theme(legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,20), breaks = c(0,5,10,15,20)) +
+  scale_y_continuous(limits= c(0,28), breaks = c(0,5,10,15,20,25)) +
   labs(title= "Cover Crop Species", y = "# of respondents") +
   coord_flip()
 
@@ -205,39 +185,51 @@ species
 ```
 
 ```{r}
-ggsave("CCSpecies_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+ggsave("CCSpecies_2022.png", plot = species, height = 5, width = 7, dpi = 300)
 ```
 
 # 7. Seeding rate(s)
-```{r, fig.height = 5, fig.width = 7}
-rate = data1 %>%
-  ggplot(aes(x= Species.planted, y= Seeding.rate.lbs, color = Planting.method.s.)) +
-  geom_jitter(size= 3) +
-  scale_y_continuous(limits = c(0,150), breaks = c(0,30,60,90,120,150)) +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size=15),
-        axis.text = element_text(size = 12),
+```{r}
+Q7= data1 %>%
+  select(respondent,cc_rate,cc_type) %>%
+  separate_rows(c(cc_rate,cc_type), sep = ",") %>%
+  mutate(cc_rate = as.numeric(cc_rate)) %>%
+  rename(response = cc_rate)
+
+```
+
+```{r, fig.width = 5, fig.height = 7}
+rate = Q7 %>%
+  ggplot(aes(x = response, y = cc_type)) +
+  #geom_jitter(size=3) +
+  geom_line(stat = "density") #+
+  #geom_text(aes(label= response), nudge_y= 0.75, size = 5) +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  labs(title= "Cover Crop Seeding Rate", y = "Seeding rate lbs") 
-  #facet_grid(cols= vars(Species.planted)) +
+  #scale_y_continuous(limits= c(0,310), breaks = c(0,30,60,90,120,150,200,300)) +
+  labs(title= "Cover Crop Rate", y = "# of respondents") 
   #coord_flip()
 
 rate
 ```
 
 ```{r}
-ggsave("CCSeedRate_2022.png", plot = q1_plot, height = 5, width = 7, dpi = 300)
+ggsave("CCSeedRate_2022.png", plot = Q7_plot, height = 5, width = 7, dpi = 300)
 ```
 
 # 8. Planting method(s)
 ```{r}
-q8= data1 %>%
+Q8= data1 %>%
   count(Planting.method.s., sort = TRUE) %>%
   rename(response = Planting.method.s.) 
 ```
 
 ```{r, fig.height = 5, fig.width = 7}
-method = q8 %>%
+method = Q8 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "azure4") +
   geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
