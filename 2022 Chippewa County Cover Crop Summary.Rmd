@@ -73,20 +73,11 @@ ggsave("CCTownships_2022.png", plot = Q1_plot, height = 8, width = 12, dpi = 300
 
 # 2. Total number of 2022 cropland acres & 3. Total number of 2022 fall cover crops planted
 ```{r}
-#what do we want? 
-#plot raw total cropland and total cover crop acres planted.
-#average percent of total acres cover cropped for farms participating would be interesting.
-
-```
-
-```{r}
 Q2 = data1 %>%
   select(respondent,acres_crop,acres_cc) %>%
   mutate(percentCC = acres_cc/acres_crop) %>%
   rename(acres.1= acres_crop, acres.2= acres_cc)%>%
   filter(!is.na(acres.1))
-  
-
 ```
 
 ```{r}
@@ -114,10 +105,10 @@ Q2_plot = Q2.2 %>%
   ggplot(aes(x= respondent, y= response, fill= acres)) +
   geom_col(position = "identity") +
   scale_fill_manual(values = c("gold3","green4")) +
-  geom_text(aes(label = percentCC), nudge_y = 70, size = 4) +
+  geom_text(aes(label = percentCC), nudge_y = 75, size = 4) +
   labs(title = "Cover Crop, Cropland, & % Cover Cropped Acres", y = "acres", x = "Chippewa County farms") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 20),
+  theme(panel.background = element_rect(fill = 'gray80'),
+        plot.title = element_text(size = 20),
         axis.title.x = element_text(size = 15),
        axis.title.y = element_text(size = 15),
        axis.text.x = element_text(size = 15),
@@ -126,6 +117,7 @@ Q2_plot = Q2.2 %>%
   coord_flip()
 
 Q2_plot
+#ignore error message, the values are intended to be missing.
 ```
 
 ```{r}
@@ -154,8 +146,8 @@ Q4_plot = Q4 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "gold3") +
   geom_text(aes(label= n), nudge_y= 0.75, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -194,11 +186,11 @@ planting_date = rbind(planting_date1,planting_date2) %>%
   ggplot(aes(x = plant_date, y = respondent, group = respondent, color= Height)) +
   geom_point(size = 3) +
   geom_line(linewidth = 2) +
-  scale_color_gradient2(midpoint = 7, mid = "steelblue3", low = "slategray1", high = "blue") +
+  scale_color_gradient2(midpoint = 6, mid = "yellow", low = "red", high = "green4") +
   scale_x_date(limit= c(as.Date("2022-08-01"), as.Date("2022-12-01"))) +
   ylim(0,33) +
-  theme_bw() +
-  theme(plot.title = element_text(size = 20),
+  theme(panel.background = element_rect(fill = 'gray80'),
+        plot.title = element_text(size = 20),
         axis.title.x = element_blank(),
        axis.title.y = element_blank(),
        axis.text.x = element_text(size = 15),
@@ -227,8 +219,8 @@ Q6_plot = Q6 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -260,8 +252,8 @@ Q7_plot = Q7 %>%
   ggplot(aes(x= type, y = response, color= type)) +
   geom_jitter(size=3) +
   scale_color_manual(values = c("purple1","green4")) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_blank(),
         axis.title.y = element_text(size=15),
         axis.text = element_text(size = 15),
@@ -290,8 +282,8 @@ Q8_plot = Q8 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -321,8 +313,8 @@ Q9_plot = Q9 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "saddlebrown") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -359,7 +351,6 @@ Q10.2 = Q10 %>% #Liquid manure Rate
 Q10.3 = Q10 %>% #What was the timing of applied manure
   filter(!is.na(manure_timing)) %>%
   count(manure_timing, sort = TRUE) 
-  manure_timing == c("liquid","unknown source")
 ```
 
 ```{r, fig.height = 5, fig.width = 7}
@@ -367,8 +358,8 @@ Q10.1_plot = Q10.1 %>%
   ggplot(aes(x = manure, y = n)) +
   geom_col(fill = "tan4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -385,8 +376,8 @@ Q10.2_plot = Q10.2 %>%
   ggplot(aes(x= order, y = manure_rate)) +
   geom_point(color = "tan4", size =4) +
   #geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text.y = element_blank(),
@@ -405,8 +396,8 @@ Q10.3_plot = Q10.3 %>%
   ggplot(aes(x = manure_timing, y = n)) +
   geom_col(fill = "tan4") +
   geom_text(aes(label= n), nudge_y= 0.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -472,8 +463,8 @@ Q11.1_plot = Q11.1 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -491,8 +482,8 @@ Q11.2_plot = Q11.2 %>%
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 0.5, size = 5) +
   facet_grid(cols=vars(bin_run)) + 
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 15),
         axis.text = element_text(size = 15),
@@ -527,8 +518,8 @@ Q12_plot = Q12 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -559,8 +550,8 @@ Q13_plot = Q13 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -591,8 +582,8 @@ Q14_plot = Q14 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
@@ -652,8 +643,8 @@ Q16_plot = Q16 %>%
   ggplot(aes(x = response, y = n)) +
   geom_col(fill = "green4") +
   geom_text(aes(label= n), nudge_y= 1.25, size = 5) +
-  theme_bw() +
-  theme(legend.position = "none",
+  theme(panel.background = element_rect(fill = 'gray80'),
+        legend.position = "none",
         axis.title.x = element_text(size = 15),
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
