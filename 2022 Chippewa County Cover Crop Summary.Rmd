@@ -188,7 +188,7 @@ planting_date = rbind(planting_date1,planting_date2) %>%
   geom_line(linewidth = 2) +
   scale_color_gradient2(midpoint = 6, mid = "yellow", low = "red", high = "green4") +
   scale_x_date(limit= c(as.Date("2022-08-01"), as.Date("2022-12-01"))) +
-  ylim(0,36) +
+  ylim(0,37) +
   theme(panel.background = element_rect(fill = 'gray80'),
         plot.title = element_text(size = 20),
         axis.title.x = element_blank(),
@@ -225,7 +225,7 @@ Q6_plot = Q6 %>%
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,37), breaks = c(0,5,10,15,20,25,30,35)) +
+  scale_y_continuous(limits= c(0,40), breaks = c(0,5,10,15,20,25,30,35)) +
   labs(title= "Cover Crop Species", y = "# of responses") +
   coord_flip()
 
@@ -319,7 +319,7 @@ Q9_plot = Q9 %>%
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,26), breaks = c(0,5,10,15,20,25)) +
+  scale_y_continuous(limits= c(0,28), breaks = c(0,5,10,15,20,25)) +
   labs(title= "Tillage", y = "# of responses") +
   coord_flip()
 
@@ -346,10 +346,12 @@ Q10.1 = Q10 %>% #How many farmers applied manure
 Q10.2 = Q10 %>% #Liquid manure Rate
   filter(manure == "liquid",
          !is.na(manure_rate)) %>%
-  mutate(order = c('D','A','B','C')) #creating random ordered variable to randomize presentation in figure
+  mutate(manure_rate = as.numeric(manure_rate)
+         ,order = c('D','A','B','C')) #creating random ordered variable to randomize presentation in figure
 
 Q10.3 = Q10 %>% #What was the timing of applied manure
   filter(!is.na(manure_timing)) %>%
+  separate_rows(manure_timing, sep = ",") %>%
   count(manure_timing, sort = TRUE) 
 ```
 
@@ -384,7 +386,7 @@ Q10.2_plot = Q10.2 %>%
         axis.text.x = element_text(size = 15),
         axis.ticks.y = element_blank(),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,7000), breaks = c(0,1000,2000,3000,4000,5000,6000,7000)) +
+  scale_y_continuous(limits= c(0,7500), breaks = c(0,1000,2000,3000,4000,5000,6000,7000)) +
   labs(title= "Liquid Manure Rates", y = "manure rate (gallons/acre)") +
   coord_flip()
 
@@ -588,7 +590,7 @@ Q14_plot = Q14 %>%
         axis.title.y = element_blank(),
         axis.text = element_text(size = 15),
         plot.title = element_text(size = 20)) +
-  scale_y_continuous(limits= c(0,33), breaks = c(0,5,10,15,20,25,30)) +
+  scale_y_continuous(limits= c(0,34), breaks = c(0,5,10,15,20,25,30)) +
   labs(title= "Reason for Planting Cover Crops", y = "# of responses") +
   coord_flip()
 
